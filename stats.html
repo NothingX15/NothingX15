@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NothingX - Statistics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <img src="logo.png" alt="NothingX Logo">
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="stats.html">Statistics</a>
+      <a href="donate.html">Donate</a>
+      <a href="vip.html">VIP</a>
+      <a href="roadmap.html">Roadmap</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h1>📊 Live Statistics</h1>
+    <div class="card" id="claimed">Loading...</div>
+    <div class="card" id="deposited">Loading...</div>
+    <div class="card" id="withdrawn">Loading...</div>
+    <div class="card" id="running">Loading...</div>
+  </div>
+
+  <footer>© 2025 NothingX Project</footer>
+
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script>
+    const SUPABASE_URL = "https://mevvytqwucxqkuomwfjm.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ldnZ5dHF3dWN4cWt1b213ZmptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1MzU4MDUsImV4cCI6MjA3MTExMTgwNX0.9kHzxg7Jzcvz6986LWuFMv1fnm1nYOUfF6dD2-TYeow";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function loadStats() {
+      const { data: withdrawals } = await supabase.from("withdrawals").select("amount_nothing");
+      const { data: deposits } = await supabase.from("deposit_events").select("credits");
+      const { data: claims } = await supabase.from("faucet_claims").select("claimed_at");
+
+      let totalWithdrawn = withdrawals?.reduce((sum, r) => sum + (r.amount_nothing || 0), 0) || 0;
+      let totalDeposits = deposits?.reduce((sum, r) => sum + (r.credits || 0), 0) || 0;
+      let totalClaimed = claims?.length * 20; // 20 Nothing per claim
+      let runningDays = 0;
+      if (claims?.length) {
+        const start = new Date(claims[0].claimed_at);
+        const now = new Date();
+        runningDays = Math.floor((now - start) / (1000*60*60*24));
+      }
+
+      document.getElementById("claimed").innerHTML =
+        `Total Nothing Claimed: <b>${totalClaimed.toLocaleString()}</b> <br><span>≈ $${(totalClaimed/100000).toFixed(2)}</span>`;
+      document.getElementById("deposited").innerHTML =
+        `Total Deposited: <b>${totalDeposits.toLocaleString()} Credits</b> <br><span>≈ $${(totalDeposits/100000).toFixed(2)}</span>`;
+      document.getElementById("withdrawn").innerHTML =
+        `Total Withdrawn: <b>${totalWithdrawn.toLocaleString()} Nothing</b> <br><span>≈ $${(totalWithdrawn/100000).toFixed(2)}</span>`;
+      document.getElementById("running").innerHTML =
+        `Running Days: <b>${runningDays}</b>`;
+    }
+    loadStats();
+  </script>
+</body>
+</html>
